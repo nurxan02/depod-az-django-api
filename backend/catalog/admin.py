@@ -33,6 +33,14 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('id', 'name', 'description')
     inlines = [ProductImageInline, ProductFeatureInline, ProductSpecInline, ProductHighlightInline]
 
+    def get_readonly_fields(self, request, obj=None):
+        # Make id read-only (and hidden on add form by not including it in fields)
+        return ('id',) if obj else ()
+
+    def get_fields(self, request, obj=None):
+        base = ('name', 'category', 'description', 'price', 'original_price', 'discount')
+        return base + (('id',) if obj else ())
+
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

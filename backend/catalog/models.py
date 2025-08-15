@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q
+from django.utils.text import slugify
 
 
 class Category(models.Model):
@@ -17,7 +18,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    id = models.SlugField(primary_key=True, max_length=100, help_text='Slug ID matching frontend, e.g., peak-black')
+    id = models.SlugField(primary_key=True, max_length=100, editable=False, help_text='Auto-generated from name (e.g., peak-black)')
     name = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     description = models.TextField(blank=True)
@@ -31,6 +32,20 @@ class Product(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    def save(self, *args, **kwargs):
+        # Auto-generate slug id from name on create
+        if not self.id:
+            base = slugify(self.name)[:95].strip('-') or 'product'
+            slug = base
+            i = 2
+            # Ensure uniqueness, respect max_length 100
+            while type(self).objects.filter(pk=slug).exists():
+                suffix = f"-{i}"
+                slug = (base[: 100 - len(suffix)] + suffix).strip('-')
+                i += 1
+            self.id = slug
+        super().save(*args, **kwargs)
 
 
 class ProductImage(models.Model):
