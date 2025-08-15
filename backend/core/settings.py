@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 
     # local apps
     'catalog',
+    'sitecontent.apps.SitecontentConfig',
 ]
 
 MIDDLEWARE = [
@@ -119,6 +120,31 @@ JAZZMIN_SETTINGS = {
     "custom_js": "js/admin-overrides.js",
     "copyright": "Depod. Developed by Masimzada",
     "show_ui_builder": False,
+    # Reorder apps & models in sidebar
+    "order_with_respect_to": [
+        "catalog.Category",
+        "catalog.Product",
+        # Then our site personalisation section
+        "sitecontent.AboutPageProxy",
+        "sitecontent.ContactPageProxy",
+        "sitecontent.FooterSettingsProxy",
+    ],
+    # Hide originals (we expose proxies under Site personalisation)
+    "hide_models": [
+        "catalog.AboutPage",
+        "catalog.ContactPage",
+        "catalog.FooterSettings",
+    ],
+    # Icons for apps/models
+    "icons": {
+        "catalog": "fas fa-boxes-stacked",
+        "catalog.category": "fas fa-list",
+        "catalog.product": "fas fa-box",
+        "sitecontent": "fas fa-sitemap",
+        "sitecontent.aboutpageproxy": "fas fa-info-circle",
+        "sitecontent.contactpageproxy": "fas fa-address-book",
+        "sitecontent.footersettingsproxy": "fas fa-shoe-prints",
+    },
 
 }
 JAZZMIN_UI_TWEAKS = {

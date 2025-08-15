@@ -9,7 +9,7 @@ class Command(BaseCommand):
         cats = {
             'earphone': 'Qulaqlıqlar',
             'powerbank': 'Powerbank',
-            'car-charger': 'Avtomobil şarjı',
+            'car-charger': 'Avtomobil aksesuarları',
             'charger': 'Şarj Cihazı',
         }
         for key, name in cats.items():

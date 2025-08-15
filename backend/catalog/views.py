@@ -2,13 +2,50 @@ from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from .models import Category, Product
+from .models import Category, Product, AboutPage, ContactPage, FooterSettings
 from .serializers import (
     CategorySerializer,
     ProductListSerializer,
     ProductDetailSerializer,
+    AboutPageSerializer,
+    ContactPageSerializer,
+    FooterSettingsSerializer,
 )
+# AboutPage API viewset
+from rest_framework import viewsets
+class AboutPageViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = AboutPageSerializer
 
+    def get_queryset(self):
+        qs = AboutPage.objects.all()
+        # Prefer active page only
+        active_qs = qs.filter(is_active=True)
+        if active_qs.exists():
+            return active_qs
+        # Fallback to first one if none marked active
+        return qs[:1]
+
+
+class ContactPageViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ContactPageSerializer
+
+    def get_queryset(self):
+        qs = ContactPage.objects.all()
+        active = qs.filter(is_active=True)
+        if active.exists():
+            return active
+        return qs[:1]
+
+
+class FooterSettingsViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = FooterSettingsSerializer
+
+    def get_queryset(self):
+        qs = FooterSettings.objects.all()
+        active = qs.filter(is_active=True)
+        if active.exists():
+            return active
+        return qs[:1]
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all().order_by('name')
