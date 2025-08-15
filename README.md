@@ -1,34 +1,74 @@
-# Depod (Static Frontend + Django Backend)
+# Depod Backend (Django + DRF + PostgreSQL)
 
-This repo contains a static frontend (GitHub Pages friendly) and a Django REST backend under `backend/` to manage content via Django Admin and serve JSON/media.
+This backend exposes a simple API to power the static frontend hosted on GitHub Pages. Manage content via Django Admin and serve JSON + media files.
 
-## Frontend (static)
+## Features
 
-- Pages: `index.html`, `products.html`, `product-detail.html`, etc.
-- Product data is fetched from a backend API if `API_BASE` is configured; otherwise it falls back to the local hardcoded list in `js/products.js`.
-- Configure API at runtime in your browser console:
+- Django Admin for products and categories
+- REST API (DRF)
+- CORS enabled for your GitHub Pages domain
+- PostgreSQL
+- Image uploads via Django media
 
-```js
-API.setBase("http://127.0.0.1:8000"); // or your deployed backend origin
+## API surface
+
+- GET /api/categories/ (each item: {id, key, name, description, image})
+- GET /api/products/?category=earphone|powerbank|charger|car-charger
+- GET /api/products/<id>/
+- GET /api/products/by-category/<key>/
+
+Product detail payload matches the current frontend structure:
+
+```
+{
+  id, name, description, category,
+  images: [{image, is_main, alt}],
+  features: [{text}],
+  specs: [{label, value}],
+  highlights: [{number, text}]
+}
+
+Category fields:
+
+{
+  id, key, name, description, image
+}
 ```
 
-The setting persists in `localStorage`.
+## Local setup
 
-## Backend (Django + DRF + PostgreSQL)
+1. Create and activate venv
+2. Install requirements
+3. Create DB and .env
+4. Migrate and create superuser
+5. Run server
 
-See `backend/README.md` for setup.
+### Quick commands (macOS, zsh)
 
-Essential endpoints:
+```zsh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+cp backend/.env.example backend/.env
+# edit backend/.env if needed
+createdb depod || true  # or use Postgres app/pgAdmin
+python backend/manage.py migrate
+python backend/manage.py createsuperuser
+python backend/manage.py runserver 8000
+```
 
-- GET `/api/products/?category=earphone|powerbank|charger|car-charger`
-- GET `/api/products/<id>/`
-- GET `/api/categories/`
+Open: http://127.0.0.1:8000/admin/
 
-Media files are returned as absolute URLs, so the static site can render images hosted by the backend.
+## Deploying the backend
 
-## Deployment model
+You can deploy to any VPS/Platform (Render, Railway, Fly.io, Heroku alternative) with PostgreSQL. Ensure environment variables and `ALLOWED_HOSTS`/CORS are set.
 
-- Host this frontend on GitHub Pages (static)
-- Host the backend on a server/platform with a domain like `https://api.depod.az`
-- Set CORS to allow your Pages domain.
-- In production you can inline a small script to set `API_BASE` globally, or instruct admins to run `API.setBase('https://api.depod.az')` once per device.
+Serve media via the backend domain, e.g. https://api.yourdomain.com/media/...
+
+## Frontend integration
+
+- Point `API_BASE` to your backend origin (e.g., https://api.yourdomain.com)
+- Frontend fetches:
+  - /api/products/?category=...
+  - /api/products/<slug>/
+- Images use absolute URLs from `image` fields.
