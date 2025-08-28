@@ -279,9 +279,18 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 
-# WhiteNoise for static files in production
+# WhiteNoise for static files in production and explicit default storage
 if not DEBUG:
     STORAGES = {
+        # Default storage for uploaded media files
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+                'base_url': MEDIA_URL,
+            },
+        },
+        # Static files storage served by WhiteNoise
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
