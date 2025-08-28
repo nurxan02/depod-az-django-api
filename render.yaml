@@ -27,6 +27,32 @@ services:
         value: true
       - key: CORS_ALLOW_ALL
         value: true
+      # Email credentials (prompt on first deploy; do not commit secrets)
+      - key: DJANGO_EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_USE_SSL
+        value: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: SERVER_EMAIL
+        sync: false
+      - key: DEFAULT_NOTIFY_EMAIL
+        sync: false
+      # Telegram notifications
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
       # Optional: initial admin (Render will prompt once at first deploy)
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false
