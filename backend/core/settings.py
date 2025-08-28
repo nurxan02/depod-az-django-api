@@ -117,6 +117,10 @@ if not DEBUG and SERVE_MEDIA and not os.getenv('DJANGO_MEDIA_ROOT'):
         MEDIA_ROOT = '/tmp/depod_media'
         Path(MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
 
+# Use a writable temp directory for file uploads in production
+if not DEBUG:
+    FILE_UPLOAD_TEMP_DIR = '/var/tmp'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'true').lower() == 'true'
