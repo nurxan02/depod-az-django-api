@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: depod-api
+    runtime: python
+    plan: free
+    rootDir: backend
+  buildCommand: pip install -r requirements-render.txt && python manage.py collectstatic --noinput
+  startCommand: python manage.py migrate --noinput && python manage.py ensure_superuser && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+  healthCheckPath: /healthz
+  envVars:
+      # Connect Django to Render Postgres via a single URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: depod-db
+          property: connectionString
+
+      # App configuration
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: false
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DJANGO_SERVE_MEDIA
+        value: true
+      - key: CORS_ALLOW_ALL
+        value: true
+      # Optional: initial admin (Render will prompt once at first deploy)
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+
+databases:
+  - name: depod-db
+    plan: free

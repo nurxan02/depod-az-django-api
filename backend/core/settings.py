@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 load_dotenv()
 
@@ -11,6 +12,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key-change-me')
 DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')]
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -66,16 +68,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.asgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'depod'),
-        'USER': os.getenv('POSTGRES_USER', 'depod'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'depod'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-        'PORT': int(os.getenv('POSTGRES_PORT', '5432')),
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'depod'),
+            'USER': os.getenv('POSTGRES_USER', 'depod'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'depod'),
+            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+            'PORT': int(os.getenv('POSTGRES_PORT', '5432')),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -95,6 +103,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.getenv('DJANGO_MEDIA_ROOT', str(BASE_DIR / 'media'))
+SERVE_MEDIA = os.getenv('DJANGO_SERVE_MEDIA', 'false').lower() == 'true'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -229,3 +238,6 @@ if not DEBUG:
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
     }
+
+# Render proxies HTTPS, so trust the X-Forwarded-Proto header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
