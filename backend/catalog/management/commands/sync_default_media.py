@@ -24,13 +24,19 @@ class Command(BaseCommand):
             if path.is_dir():
                 target.mkdir(parents=True, exist_ok=True)
                 continue
-            if target.exists():
-                continue
             try:
                 target.parent.mkdir(parents=True, exist_ok=True)
+                # Always overwrite to keep repo media in sync
                 shutil.copy2(path, target)
                 copied += 1
             except Exception as e:
                 self.stdout.write(self.style.WARNING(f"Failed to copy {path} -> {target}: {e}"))
 
-        self.stdout.write(self.style.SUCCESS(f"sync_default_media done. Copied {copied} files."))
+        # Log a quick summary of known subfolders for debug
+        cats = (dst / 'categories')
+        prods = (dst / 'products')
+        cats_n = sum(1 for _ in cats.rglob('*') if _.is_file()) if cats.exists() else 0
+        prods_n = sum(1 for _ in prods.rglob('*') if _.is_file()) if prods.exists() else 0
+        self.stdout.write(self.style.SUCCESS(
+            f"sync_default_media done. Copied {copied} files. categories={cats_n}, products={prods_n}"
+        ))
