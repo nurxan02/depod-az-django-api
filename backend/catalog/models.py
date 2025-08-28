@@ -10,8 +10,8 @@ class Category(models.Model):
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
 
     class Meta:
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
+        verbose_name = 'Kateqoriya'
+        verbose_name_plural = 'Kateqoriyalar'
 
     def __str__(self) -> str:
         return self.name
@@ -28,6 +28,8 @@ class Product(models.Model):
     discount = models.PositiveIntegerField(default=0)
 
     class Meta:
+        verbose_name = "Məhsul"
+        verbose_name_plural = "Məhsullar"
         ordering = ['name']
 
     def __str__(self) -> str:
@@ -121,8 +123,8 @@ class AboutPage(models.Model):
     is_active = models.BooleanField(default=False, help_text="Saytda göstəriləcək aktiv səhifə")
 
     class Meta:
-        verbose_name = "About Page"
-        verbose_name_plural = "About Pages"
+        verbose_name = "Haqqında Səhifəsi"
+        verbose_name_plural = "Haqqında Səhifəsi"
         constraints = [
             # Ensure only one AboutPage can be active at a time
             models.UniqueConstraint(
@@ -202,8 +204,8 @@ class FooterSettings(models.Model):
     is_active = models.BooleanField(default=False, help_text="Saytda göstəriləcək aktiv footer")
 
     class Meta:
-        verbose_name = "Footer Settings"
-        verbose_name_plural = "Footer Settings"
+        verbose_name = "Footer Hissəsi"
+        verbose_name_plural = "Footer Hissəsi"
         constraints = [
             models.UniqueConstraint(
                 fields=["is_active"],
@@ -261,8 +263,8 @@ class ContactPage(models.Model):
     is_active = models.BooleanField(default=False, help_text="Saytda göstəriləcək aktiv əlaqə səhifəsi")
 
     class Meta:
-        verbose_name = "Contact Page"
-        verbose_name_plural = "Contact Pages"
+        verbose_name = "Əlaqə Səhifəsi"
+        verbose_name_plural = "Əlaqə Səhifəsi"
         constraints = [
             models.UniqueConstraint(
                 fields=["is_active"],
@@ -299,3 +301,144 @@ class ContactFAQ(models.Model):
 
     class Meta:
         ordering = ['order', 'id']
+
+
+class ProductOffer(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Gözləyir'),
+        ('reviewed', 'Baxılıb'),
+        ('accepted', 'Qəbul edilib'),
+        ('rejected', 'Rədd edilib'),
+    ]
+    
+    AZERBAIJAN_CITIES = [
+        ('baku', 'Bakı'),
+        ('ganja', 'Gəncə'),
+        ('sumqayit', 'Sumqayıt'),
+        ('mingachevir', 'Mingəçevir'),
+        ('quba', 'Quba'),
+        ('lankaran', 'Lənkəran'),
+        ('shaki', 'Şəki'),
+        ('yevlax', 'Yevlax'),
+        ('nakhchivan', 'Naxçıvan'),
+        ('ordubad', 'Ordubad'),
+        ('qabala', 'Qəbələ'),
+        ('qusar', 'Qusar'),
+        ('shamakhi', 'Şamaxı'),
+        ('tovuz', 'Tovuz'),
+        ('agdam', 'Ağdam'),
+        ('barda', 'Bərdə'),
+        ('beylagan', 'Beyləqan'),
+        ('bilasuvar', 'Biləsuvar'),
+        ('dashkasan', 'Daşkəsən'),
+        ('fizuli', 'Füzuli'),
+        ('gadabay', 'Gədəbəy'),
+        ('goranboy', 'Goranboy'),
+        ('goychay', 'Göyçay'),
+        ('hajigabul', 'Hacıqabul'),
+        ('imishli', 'İmişli'),
+        ('ismayilli', 'İsmayıllı'),
+        ('kalbajar', 'Kəlbəcər'),
+        ('kurdamir', 'Kürdəmir'),
+        ('lachin', 'Laçın'),
+        ('lerik', 'Lerik'),
+        ('masalli', 'Masallı'),
+        ('neftchala', 'Neftçala'),
+        ('oguz', 'Oğuz'),
+        ('qakh', 'Qax'),
+        ('qazakh', 'Qazax'),
+        ('qobustan', 'Qobustan'),
+        ('salyan', 'Salyan'),
+        ('shamkir', 'Şəmkir'),
+        ('shusha', 'Şuşa'),
+        ('tartar', 'Tərtər'),
+        ('ujar', 'Ucar'),
+        ('xankendi', 'Xankəndi'),
+        ('yardimli', 'Yardımlı'),
+        ('zangilan', 'Zəngilan'),
+        ('zaqatala', 'Zaqatala'),
+        ('zardab', 'Zərdab'),
+    ]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='offers')
+    first_name = models.CharField(max_length=100, verbose_name='Ad')
+    last_name = models.CharField(max_length=100, verbose_name='Soyad')
+    phone_number = models.CharField(max_length=20, verbose_name='Telefon nömrəsi')
+    city = models.CharField(max_length=50, choices=AZERBAIJAN_CITIES, verbose_name='Şəhər')
+    email = models.EmailField(blank=True, null=True, verbose_name='Email (İstəyə görə)')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='Miqdar (ədəd)')
+    offer_text = models.TextField(blank=True, verbose_name='Təklif mətn (istəyə görə)')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='Status')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Yaradılma tarixi')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Yenilənmə tarixi')
+
+    class Meta:
+        verbose_name = 'Məhsul Təklifi'
+        verbose_name_plural = 'Məhsul Təklifləri'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.product.name}"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    @property
+    def category_name(self):
+        return self.product.category.name if self.product.category else "Kateqoriya yoxdur"
+
+
+class ContactMessage(models.Model):
+    SUBJECT_CHOICES = [
+        ("product-inquiry", "Məhsul haqqında sual"),
+        ("technical-support", "Texniki dəstək"),
+        ("complaint", "Şikayət"),
+        ("suggestion", "Təklif"),
+        ("partnership", "Əməkdaşlıq"),
+        ("other", "Digər"),
+    ]
+
+    STATUS_CHOICES = [
+        ("new", "Yeni"),
+        ("read", "Oxunub"),
+        ("archived", "Arxivləndi"),
+    ]
+
+    first_name = models.CharField(max_length=100, verbose_name="Ad")
+    last_name = models.CharField(max_length=100, verbose_name="Soyad")
+    email = models.EmailField(verbose_name="E-poçt")
+    phone = models.CharField(max_length=30, blank=True, verbose_name="Telefon")
+    subject = models.CharField(max_length=50, choices=SUBJECT_CHOICES, verbose_name="Mövzu")
+    message = models.TextField(verbose_name="Mesaj")
+    privacy_accepted = models.BooleanField(default=False, verbose_name="Məxfilik qəbul edildi")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name="Status")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Göndərilmə tarixi")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Yenilənmə tarixi")
+
+    class Meta:
+        verbose_name = "Əlaqə Mesajı"
+        verbose_name_plural = "Əlaqə Mesajları"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name} - {self.get_subject_display()}"
+
+
+# Simple unique daily site visits (per session)
+class SiteVisit(models.Model):
+    date = models.DateField(db_index=True)
+    session_key = models.CharField(max_length=40, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("date", "session_key")
+        indexes = [
+            models.Index(fields=["date"]),
+            models.Index(fields=["session_key"]),
+        ]
+        verbose_name = "Sayt Ziyarəti"
+        verbose_name_plural = "Sayt Ziyarətləri"
+
+    def __str__(self) -> str:
+        return f"{self.date} - {self.session_key}"

@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # local apps
-    'catalog',
+    'catalog.apps.CatalogConfig',
     'sitecontent.apps.SitecontentConfig',
 ]
 
@@ -34,12 +34,14 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Analytics visit tracker (must be after Session & Auth middleware)
+    'catalog.middleware.SiteVisitMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -107,6 +109,29 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+# Email configuration
+EMAIL_BACKEND = os.getenv('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '25'))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'false').lower() == 'true'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false').lower() == 'true'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@depod.az')
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+# Notification recipients (either set ADMINS or DEFAULT_NOTIFY_EMAIL)
+DEFAULT_NOTIFY_EMAIL = os.getenv('DEFAULT_NOTIFY_EMAIL', '')
+ADMINS = [
+    # Example: ('Admin', 'admin@depod.az')
+]
+
+# Base URL for building links in emails (e.g., https://admin.depod.az)
+ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'localhost')
+
+# Telegram notifications (optional)
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
+
 # Jazzmin configuration (optional branding)
 JAZZMIN_SETTINGS = {
     "site_title": "Depod Admin",
@@ -138,13 +163,29 @@ JAZZMIN_SETTINGS = {
     # Icons for apps/models
     "icons": {
         "catalog": "fas fa-boxes-stacked",
+        "catalog.ContactMessage": "fa-solid fa-envelope",
         "catalog.category": "fas fa-list",
         "catalog.product": "fas fa-box",
+        "catalog.productOffer": "fas fa-bell",
         "sitecontent": "fas fa-sitemap",
         "sitecontent.aboutpageproxy": "fas fa-info-circle",
         "sitecontent.contactpageproxy": "fas fa-address-book",
         "sitecontent.footersettingsproxy": "fas fa-shoe-prints",
     },
+  "search_model": ["catalog.Product", "catalog.Category"],
+
+
+    "topmenu_links": [
+
+         {"model": "catalog.Category"},
+         {"model": "catalog.Product"},
+         {"model": "catalog.ProductOffer"},
+        
+
+    ],
+    "usermenu_links": [
+        {"name": "Texniki Dəstək", "url": "https://wa.link/5n8uhh", "new_window": True},
+    ]
 
 }
 JAZZMIN_UI_TWEAKS = {
@@ -160,7 +201,7 @@ JAZZMIN_UI_TWEAKS = {
     "layout_boxed": False,
     "footer_fixed": True,
     "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-warning",
+    "sidebar": "sidebar-dark-success",
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
     "sidebar_nav_child_indent": False,
@@ -177,7 +218,10 @@ JAZZMIN_UI_TWEAKS = {
         "danger": "btn-danger",
         "success": "btn-success"
     }
+
 }
+
+
 # WhiteNoise for static files in production
 if not DEBUG:
     STORAGES = {

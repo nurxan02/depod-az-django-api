@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Category, Product, ProductImage, ProductFeature, ProductSpec, ProductHighlight,
     AboutPage, AboutValue, AboutTeamMember, AboutTechFeature, AboutTechStat,
-    ContactPage, ContactWorkingHour, ContactFAQ, FooterSettings
+    ContactPage, ContactWorkingHour, ContactFAQ, FooterSettings, ProductOffer, ContactMessage
 )
 
 
@@ -178,3 +178,78 @@ class FooterSettingsAdmin(admin.ModelAdmin):
             first.save()
         self.message_user(request, "Aktiv footer dəyişdirildi.")
     make_active.short_description = "Seçiləni aktiv et"
+
+
+@admin.register(ProductOffer)
+class ProductOfferAdmin(admin.ModelAdmin):
+    list_display = ("get_customer_name", "get_product_name", "quantity", "city", "status", "created_at")
+    list_filter = ("status", "city", "quantity", "created_at")
+    search_fields = ("first_name", "last_name", "phone_number", "email", "product__name")
+    readonly_fields = ("created_at", "updated_at")
+    list_editable = ("status",)
+    ordering = ("-created_at",)
+    
+    fieldsets = (
+        ("Müştəri Məlumatları", {
+            "fields": ("first_name", "last_name", "phone_number", "email", "city")
+        }),
+        ("Məhsul və Təklif", {
+            "fields": ("product", "quantity", "offer_text")
+        }),
+        ("Status və Tarixlər", {
+            "fields": ("status", "created_at", "updated_at")
+        }),
+    )
+    
+    actions = ["mark_as_reviewed", "mark_as_accepted", "mark_as_rejected"]
+    
+    def get_customer_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
+    get_customer_name.short_description = "Müştəri Adı"
+    
+    def get_product_name(self, obj):
+        return obj.product.name
+    get_product_name.short_description = "Məhsul"
+    
+    def mark_as_reviewed(self, request, queryset):
+        updated = queryset.update(status='reviewed')
+        self.message_user(request, f"{updated} təklif nəzərdən keçirildi olaraq işarələndi.")
+    mark_as_reviewed.short_description = "Nəzərdən keçirildi olaraq işarələ"
+    
+    def mark_as_accepted(self, request, queryset):
+        updated = queryset.update(status='accepted')
+        self.message_user(request, f"{updated} təklif qəbul edildi olaraq işarələndi.")
+    mark_as_accepted.short_description = "Qəbul edildi olaraq işarələ"
+    
+    def mark_as_rejected(self, request, queryset):
+        updated = queryset.update(status='rejected')
+        self.message_user(request, f"{updated} təklif rədd edildi olaraq işarələndi.")
+    mark_as_rejected.short_description = "Rədd edildi olaraq işarələ"
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("first_name", "last_name", "email", "phone", "subject", "status", "created_at")
+    list_filter = ("status", "subject", "created_at")
+    search_fields = ("first_name", "last_name", "email", "phone", "message")
+    readonly_fields = ("created_at", "updated_at")
+    list_editable = ("status",)
+    ordering = ("-created_at",)
+
+    fieldsets = (
+        ("Müraciətçi", {"fields": ("first_name", "last_name", "email", "phone")}),
+        ("Məzmun", {"fields": ("subject", "message", "privacy_accepted")}),
+        ("Status", {"fields": ("status", "created_at", "updated_at")}),
+    )
+
+    actions = ["mark_as_read", "archive"]
+
+    def mark_as_read(self, request, queryset):
+        updated = queryset.update(status="read")
+        self.message_user(request, f"{updated} mesaj oxundu olaraq işarələndi.")
+    mark_as_read.short_description = "Oxundu olaraq işarələ"
+
+    def archive(self, request, queryset):
+        updated = queryset.update(status="archived")
+        self.message_user(request, f"{updated} mesaj arxivləndi.")
+    archive.short_description = "Arxivlə"

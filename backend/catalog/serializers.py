@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductFeature, ProductSpec, ProductHighlight
+from .models import Category, Product, ProductImage, ProductFeature, ProductSpec, ProductHighlight, ProductOffer, ContactMessage
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -166,3 +166,99 @@ class FooterSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = FooterSettings
         fields = ("id", "description", "email", "phone", "bottom_text", "is_active", "updated_at")
+
+
+class ProductOfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductOffer
+        fields = [
+            'first_name', 
+            'last_name',
+            'phone_number', 
+            'email', 
+            'city', 
+            'product',
+            'quantity',
+            'offer_text'
+        ]
+        extra_kwargs = {
+            'email': {'required': False, 'allow_blank': True},
+            'offer_text': {'required': False, 'allow_blank': True},
+            'quantity': {'min_value': 1}
+        }
+    
+    def validate_phone_number(self, value):
+        """Telefon nömrəsinin formatını yoxlayır"""
+        if not value:
+            raise serializers.ValidationError("Telefon nömrəsi tələb olunur.")
+        
+        # Daha elastik telefon nömrəsi validasiyası
+        import re
+        # Allow various formats: +994501234567, +994 50 123 45 67, 0501234567, etc.
+        phone_pattern = r'^[\+]?[0-9\s\-\(\)]{10,20}$'
+        if not re.match(phone_pattern, value.strip()):
+            raise serializers.ValidationError("Düzgün telefon nömrəsi formatında daxil edin.")
+        
+        return value.strip()
+    
+    def validate_first_name(self, value):
+        """Müştəri adının uzunluğunu yoxlayır"""
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Ad ən azı 2 hərf olmalıdır.")
+        return value.strip()
+    
+    def validate_quantity(self, value):
+        """Miqdarın düzgünlüyünü yoxlayır"""
+        if value < 1:
+            raise serializers.ValidationError("Miqdar ən azı 1 olmalıdır.")
+        if value > 1000:
+            raise serializers.ValidationError("Miqdar 1000-dən çox ola bilməz.")
+        return value
+
+    def create(self, validated_data):
+        """Yeni təklif yaradır"""
+        return ProductOffer.objects.create(**validated_data)
+
+
+class ContactMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactMessage
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "subject",
+            "message",
+            "privacy_accepted",
+        ]
+        extra_kwargs = {
+            "phone": {"required": False, "allow_blank": True},
+            "privacy_accepted": {"required": True},
+        }
+
+    def validate_first_name(self, value):
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Ad ən azı 2 hərf olmalıdır.")
+        return value.strip()
+
+    def validate_last_name(self, value):
+        if not value or len(value.strip()) < 2:
+            raise serializers.ValidationError("Soyad ən azı 2 hərf olmalıdır.")
+        return value.strip()
+
+    def validate_phone(self, value):
+        if not value:
+            return ""
+        import re
+        if not re.match(r"^[\+\d\s\-\(\)]{7,20}$", value.strip()):
+            raise serializers.ValidationError("Düzgün telefon nömrəsi daxil edin.")
+        return value.strip()
+
+    def validate_privacy_accepted(self, value):
+        if value is not True:
+            raise serializers.ValidationError("Məxfilik siyasəti qəbul edilməlidir.")
+        return value
+
+    def create(self, validated_data):
+        return ContactMessage.objects.create(**validated_data)
