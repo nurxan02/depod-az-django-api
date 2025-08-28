@@ -105,6 +105,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.getenv('DJANGO_MEDIA_ROOT', str(BASE_DIR / 'media'))
 SERVE_MEDIA = os.getenv('DJANGO_SERVE_MEDIA', 'false').lower() == 'true'
 
+# On Render (or any prod-like env), the app directory is read-only at runtime.
+# If serving media without an external storage, place uploads under a writable tmp dir.
+if not DEBUG and SERVE_MEDIA and not os.getenv('DJANGO_MEDIA_ROOT'):
+    MEDIA_ROOT = '/var/tmp/depod_media'
+    # Ensure directory exists
+    try:
+        Path(MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
+    except Exception:
+        # Fallback to /tmp if /var/tmp is not available
+        MEDIA_ROOT = '/tmp/depod_media'
+        Path(MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'true').lower() == 'true'
